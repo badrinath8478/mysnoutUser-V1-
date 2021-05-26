@@ -194,5 +194,30 @@ exports.logOut = (req, res, next) => {
   
 
 
+  exports.updateProfile = (req, res, next) => {
+    Tenant.findOne({ email: req.session.tenant.email })
+      .then((post) => {
+        post.fullName = req.body.fullName;
+  
+        post.mobileNumber = req.body.mobileNumber;
+  
+        post.profilePic = req.file.path;
+  
+        return post.save();
+      })
+      .then((result) => {
+        res.status(201).json({ message: process.env.POST_UPDATED });
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(500).json({ error: err });
+      });
+  };
+  
+  
+  exports.deleteProfilePic = (req,res,next) => {
+    
+  }
+
 
 

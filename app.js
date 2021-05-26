@@ -11,6 +11,7 @@ const MongoDBSession = require('connect-mongodb-session')(session);
 
 
 const tenantRouter = require("./router/auth");
+const getroutesRouter = require("./router/getroutes");
 const tenant = require('./model/tenant');
 
 
@@ -18,6 +19,7 @@ mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopol
   console.log('DB Connected!');
  }).catch(err => { console.log(err) });
 mongoose.Promise = global.Promise;
+
 
 const store = new MongoDBSession({
   uri: process.env.MONGO_URL,
@@ -56,6 +58,8 @@ app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
+app.use( express.static(path.join(__dirname, "public")));
+
 
 
 app.use((req, res, next) => {
@@ -74,6 +78,8 @@ app.use((req, res, next) => {
 
 
 app.use("/tenant", tenantRouter);
+app.use("/tenant", getroutesRouter);
+
 
 app.use((req, res, next) => {
   const error = new Error("Not found");
