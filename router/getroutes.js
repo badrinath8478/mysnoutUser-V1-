@@ -21,6 +21,12 @@ router.get("/hostelsBeyond/:lat/:lng", GetController.hostelsBeyond);
 router.get("/searchHostels", GetController.searchHostels);
 
 
+router.get("/filter", GetController.filter);
+
+
+router.get("/hostel/:hostelId", GetController.hostel);
+
+
 
 
 module.exports = router;

@@ -6,13 +6,12 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const path = require('path');
 const cookieParser = require('cookie-parser');
-const session = require('express-session');
-const MongoDBSession = require('connect-mongodb-session')(session);
 
 
 const tenantRouter = require("./router/auth");
 const getroutesRouter = require("./router/getroutes");
-const tenant = require('./model/tenant');
+const likedHostelsRouter = require("./router/likedHostels");
+
 
 
 mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true }).then(() => {
@@ -21,43 +20,11 @@ mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopol
 mongoose.Promise = global.Promise;
 
 
-const store = new MongoDBSession({
-  uri: process.env.MONGO_URL,
-  collection: "mySessions"
-});
-
-
-app.use(session({
-    secret: 'Dontsayit',
-  resave: true,
-  saveUninitialized: true,
-  store: store
-
-}));
-
-app.use(function(req, res, next) {
-  if (req.session && req.session.tenant) {
-    tenant.findOne({ email: req.session.tenant.email }, function(err, tenant) {
-      if (tenant) {
-        req.tenant = tenant;
-        delete req.tenant.password; // delete the password from the session
-        req.session.tenant = tenant;  //refresh the session value
-        res.locals.tenant = tenant;
-      }
-      // finishing processing the middleware and run the route
-      next();
-    });
-  } else {
-    next();
-  }
-});
-
 
 app.use(morgan("dev"));
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-
 app.use( express.static(path.join(__dirname, "public")));
 
 
@@ -79,6 +46,7 @@ app.use((req, res, next) => {
 
 app.use("/tenant", tenantRouter);
 app.use("/tenant", getroutesRouter);
+app.use("/tenant", likedHostelsRouter);
 
 
 app.use((req, res, next) => {

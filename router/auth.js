@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const AuthController = require("../controller/auth");
+const isAuth = require("../middleware/auth");
 
 
 const multer = require('multer');
@@ -39,19 +40,19 @@ router.post("/register", AuthController.userRegister);
 router.post("/forgotPassword", AuthController.forgotPassword);
 
 
-router.put("/resetPassword",  AuthController.resetPassword);
+router.put("/resetPassword/:tenantId",isAuth,AuthController.resetPassword);
 
 
-router.post("/verifyOtp", AuthController.verifyOtp);
+router.post("/verifyOtp/:tenantId",AuthController.verifyOtp);
 
 
 router.post("/logOut", AuthController.logOut);
 
 
-router.put("/updateProfile",upload.single("profilePic"),AuthController.updateProfile);
+router.put("/updateProfile",isAuth,upload.single("profilePic"),AuthController.updateProfile);
 
 
-router.delete("/deleteProfilePic",AuthController.deleteProfilePic);
+router.put("/deleteProfilePic",isAuth,AuthController.deleteProfilePic);
 
 
 

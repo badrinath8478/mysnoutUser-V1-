@@ -12,7 +12,12 @@ const tenantSchema = mongoose.Schema({
      profilePic: { type: String },
      OTP:{type:String},
      otpExpire:Date,
-     createdAt:{type:Date,default:Date.now()}
+     createdAt:{type:Date,default:Date.now()},
+     isVerified:{type:Boolean,default:false},
+     likedHostelsId:{type: mongoose.Schema.Types.ObjectId,
+        ref: "LikedHostels"}
+     
+
     
    
 });

@@ -21,9 +21,9 @@ const hostelSchema = mongoose.Schema({
   },
   estbyear: { type: Number, required: true },
   noOfFloors: { type: Number, required: true },
-
+  likes: { type: Number, default:0 },
   location: {
-    // type: { type: String, default: "Point" },
+    
     
       latitude: { type: Number, required: true },
       longitude: { type: Number, required: true },
