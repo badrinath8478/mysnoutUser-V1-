@@ -2,7 +2,6 @@ const Hostel = require("../model/hosteldetails");
 const hostelFeatures = require("../model/hostelFeatures");
 const hostelPics = require("../model/pics");
 const roomsAvailable = require("../model/roomsAvailable");
-var _ = require("lodash");
 
 // code to get hostels around 0km to 100km
 exports.hostelsAround = (req, res, next) => {
@@ -29,11 +28,10 @@ exports.hostelsAround = (req, res, next) => {
       $limit: 10,
     },
     {
-      $project: { _id: 1, dist: 1 },
+      $project: { _id: 1 },
     },
   ])
     .then(async (items) => {
-      console.log(items);
       let Hostels = [];
       for (const item of items) {
         await Hostel.findById(item._id)
@@ -48,13 +46,11 @@ exports.hostelsAround = (req, res, next) => {
       }
       return res.status(201).json({
         hostels: Hostels.length,
-        currentPage: page,
-        nextPage: page + 1,
         success: Hostels,
       });
     })
     .catch((err) => {
-      console.log(err);
+      return res.status(500).json({ error: err });
     });
 };
 
@@ -83,11 +79,10 @@ exports.hostelsNear = (req, res, next) => {
       $limit: 10,
     },
     {
-      $project: { _id: 1, dist: 1 },
+      $project: { _id: 1 },
     },
   ])
     .then(async (items) => {
-      console.log(items);
       let Hostels = [];
       for (const item of items) {
         await Hostel.findById(item._id)
@@ -105,7 +100,7 @@ exports.hostelsNear = (req, res, next) => {
         .json({ hostels: Hostels.length, success: Hostels });
     })
     .catch((err) => {
-      console.log(err);
+      return res.status(500).json({ error: err });
     });
 };
 
@@ -134,11 +129,10 @@ exports.hostelsWithin = (req, res, next) => {
       $limit: 10,
     },
     {
-      $project: { _id: 1, dist: 1 },
+      $project: { _id: 1 },
     },
   ])
     .then(async (items) => {
-      console.log(items);
       let Hostels = [];
       for (const item of items) {
         await Hostel.findById(item._id)
@@ -156,7 +150,7 @@ exports.hostelsWithin = (req, res, next) => {
         .json({ hostels: Hostels.length, success: Hostels });
     })
     .catch((err) => {
-      console.log(err);
+      return res.status(500).json({ error: err });
     });
 };
 
@@ -185,11 +179,10 @@ exports.hostelsBeyond = (req, res, next) => {
       $limit: 10,
     },
     {
-      $project: { _id: 1, dist: 1 },
+      $project: { _id: 1 },
     },
   ])
     .then(async (items) => {
-      console.log(items);
       let Hostels = [];
       for (const item of items) {
         await Hostel.findById(item._id)
@@ -207,7 +200,7 @@ exports.hostelsBeyond = (req, res, next) => {
         .json({ hostels: Hostels.length, success: Hostels });
     })
     .catch((err) => {
-      console.log(err);
+      return res.status(500).json({ error: err });
     });
 };
 
@@ -216,16 +209,16 @@ exports.searchHostels = (req, res, next) => {
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
   const skip = (page - 1) * limit;
-  const search = req.body.search;
+  const search = String(req.body.search);
   Hostel.aggregate([
     {
       $match: {
         $or: [
-          { city: search },
-          { area: search },
-          { pincode: search },
-          { state: search },
-          { country: search },
+          { "location.city": search },
+          { "location.area": search },
+          { "location.pincode": search },
+          { "location.state": search },
+          { "location.country": search },
         ],
       },
     },
@@ -236,11 +229,10 @@ exports.searchHostels = (req, res, next) => {
       $limit: 10,
     },
     {
-      $project: { _id: 1, dist: 1 },
+      $project: { _id: 1 },
     },
   ])
     .then(async (items) => {
-      console.log(items);
       let Hostels = [];
       for (const item of items) {
         await Hostel.findById(item._id)
@@ -258,7 +250,7 @@ exports.searchHostels = (req, res, next) => {
         .json({ hostels: Hostels.length, success: Hostels });
     })
     .catch((err) => {
-      console.log(err);
+      return res.status(500).json({ error: err });
     });
 };
 
@@ -274,7 +266,7 @@ exports.hostel = (req, res, next) => {
       return res.status(201).json({ success: hostel });
     })
     .catch((err) => {
-      console.log(err);
+      return res.status(500).json({ error: err });
     });
 };
 
@@ -284,11 +276,10 @@ exports.filter = (req, res, next) => {
   const limit = 10;
   const skip = (page - 1) * limit;
   const gte = parseInt(req.body.gte) || 0;
-  const lte = parseInt(req.body.lte)|| 100000;
-  const gender = req.body.gender ;
+  const lte = parseInt(req.body.lte) || 100000;
+  const gender = req.body.gender;
   const roomType = req.body.roomType;
-  
-  
+
   Hostel.aggregate([
     {
       $lookup: {
@@ -321,9 +312,9 @@ exports.filter = (req, res, next) => {
     {
       $match: {
         $and: [
-          { "hostelRooms.rooms.price": { $gte: gte, $lte: lte } },
-          { "hostelRooms.rooms.roomType": roomType },
           { "hostelfeatures.hostelAvailableFor": gender },
+          { "hostelRooms.rooms.roomType": roomType },
+          { "hostelRooms.rooms.price": { $gte: gte, $lte: lte } },
         ],
       },
     },
@@ -338,7 +329,6 @@ exports.filter = (req, res, next) => {
     },
   ])
     .then(async (items) => {
-      console.log(items);
       let Hostels = [];
       for (const item of items) {
         await Hostel.findById(item._id)
@@ -351,9 +341,11 @@ exports.filter = (req, res, next) => {
             Hostels.push(hostels);
           });
       }
-      return res.status(201).json({ success: Hostels });
+      return res
+        .status(201)
+        .json({ hostels: Hostels.length, success: Hostels });
     })
     .catch((err) => {
-      console.log(err);
+      return res.status(500).json({ error: err });
     });
 };

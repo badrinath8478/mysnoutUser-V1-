@@ -14,7 +14,6 @@ module.exports = (req, res, next) => {
         return res.status(401).json({ message: "un authoarized"});
       }
       req.tenantId = payload.tenantId;
-      // console.log(payload);
       next();
     })
   };

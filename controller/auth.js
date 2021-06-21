@@ -22,7 +22,7 @@ exports.userRegister = (req, res, next) => {
     .exec()
     .then((tenant) => {
       if (tenant) {
-        return res.status(500).json({ message: process.env.MAIL_EXISTS });
+        return res.status(500).json({ error: process.env.MAIL_EXISTS });
       } else {
         bcrypt.hash(password, 10, (err, hash) => {
           if (err) {
@@ -48,8 +48,10 @@ exports.userRegister = (req, res, next) => {
                   text: `Hi there , to login into your 'MY-SNOUT' account here is the OTP  "${otp}". \n This otp expires in 10 minutes `,
                 };
                 transporter.sendMail(mailOptions, (err) => {
-                  if (err) throw err;
-                  console.log(process.env.MAIL_SENT);
+                  if (err) {
+                    return res.status(500).json({ error: err });
+                  }
+                  
                 });
                 return res
                   .status(201)
@@ -71,14 +73,13 @@ exports.userRegister = (req, res, next) => {
 //code to login into an account
 exports.login = (req, res, next) => {
   const { email, password } = req.body;
-
   Tenant.findOne({ email: email })
     .exec()
     .then((tenant) => {
       if (!tenant) {
         return res
           .status(500)
-          .json({ message: process.env.EMAIL_NOT_REGISTERED });
+          .json({ error: process.env.EMAIL_NOT_REGISTERED });
       } ;
       if(tenant.isVerified === true) {
         bcrypt.compare(password, tenant.password, (err, result) => {
@@ -98,15 +99,15 @@ exports.login = (req, res, next) => {
           } else {
             return res
               .status(500)
-              .json({ message: process.env.INCORRECT_PASSWORD });
+              .json({ error: process.env.INCORRECT_PASSWORD });
           }
         });
       } else {
-        res.status(500).json({ message: "get verified to login" });
+        res.status(500).json({ error: process.env.GET_VERIFIED });
       }
     })
     .catch((err) => {
-      console.log(err);
+      return res.status(500).json({ error: err });
     });
 };
 
@@ -124,15 +125,15 @@ exports.verifyOtp = (req, res, next) => {
         tenant.otpExpire = null;
         tenant.isVerified = true;
         tenant.save();
-        return res.status(201).json({ message: process.env.OTP_VERIFIED });
+        return res.status(201).json({ success: process.env.OTP_VERIFIED });
       } else {
         return res
           .status(500)
-          .json({ message: process.env.OTP_INCORRECT_EXPIRED ,tenant:tenant._id});
+          .json({ error: process.env.OTP_INCORRECT_EXPIRED });
       }
     })
     .catch((err) => {
-      console.log(err);
+      
       res.status(500).json({ error: err });
     });
 };
@@ -152,8 +153,10 @@ exports.forgotPassword = (req, res, next) => {
           text: process.env.RESET_PASSWORD + otp,
         };
         transporter.sendMail(mailOptions, (err) => {
-          if (err) throw err;
-          console.log(process.env.MAIL_SENT);
+          if (err) {
+            return res.status(500).json({ error: err });
+          }
+          
         });
         tenant.OTP = otp;
         tenant.otpExpire = Date.now() + 3600;
@@ -162,10 +165,10 @@ exports.forgotPassword = (req, res, next) => {
       }
     })
     .then((result) => {
-      return res.status(201).json({ success: result._id });
+      return res.status(201).json({success: process.env.MAIL_SENT, tenantId: result._id });
     })
     .catch((err) => {
-      console.log(err);
+      return res.status(500).json({ error: err });
     });
 };
 
@@ -181,13 +184,12 @@ exports.resetPassword = (req, res, next) => {
     if (tenant.isVerified === true) {
       bcrypt.hash(password, 10, (err, hash) => {
         if (err) {
-          console.log(err);
+          return res.status(500).json({ error: err });
         }
         if (password === confirm) {
           tenant.password = hash;
           tenant.OTP = null;
           tenant.otpExpires = null;
-          res.status(201).json({ message: process.env.SUCCES });
           tenant.save();
         }
         let mailOptions = {
@@ -196,27 +198,26 @@ exports.resetPassword = (req, res, next) => {
           subject: process.env.RESET,
           text: process.env.PASSWORD_RESET_SUCCESS,
         };
-        return transporter.sendMail(mailOptions, (err) => {
-          if (err) throw err;
-          console.log(process.env.MAIL_SENT);
+        transporter.sendMail(mailOptions, (err) => {
+          if (err) {
+            return res.status(500).json({ error: err });
+          } else {
+            return res.status(201).json({ success: process.env.PASSWORD_RESET });
+          }
         });
       });
-    }else{
-      console.log("get verified inorder to reset password");
-
+    } else {
+      return res.status(500).json({ error: process.env.GET_VERIFIED_TO_RESETPASSWORD });
     }
+  })
+  .catch((err) => {
+    return res.status(500).json({ error: err });
   });
 };
 
 //code to logout
 exports.logOut = (req, res, next) => {
-  req.session.destroy((err) => {
-    if (err) {
-      res.status(500).json({ message: process.env.SESSION_ERR });
-    } else {
-      res.status(201).json({ message: process.env.SESSION_DESTROYED });
-    }
-  });
+
 };
 
 //code to update profile page
@@ -229,10 +230,10 @@ exports.updateProfile = (req, res, next) => {
       return post.save();
     })
     .then((result) => {
-      res.status(201).json({ message: process.env.POST_UPDATED });
+      res.status(201).json({ success: process.env.POST_UPDATED });
     })
     .catch((err) => {
-      console.log(err);
+      
       res.status(500).json({ error: err });
     });
 };
@@ -245,10 +246,10 @@ exports.deleteProfilePic = (req, res, next) => {
       return post.save();
     })
     .then((result) => {
-      res.status(201).json({ message: process.env.POST_UPDATED });
+      res.status(201).json({ success: process.env.POST_UPDATED });
     })
     .catch((err) => {
-      console.log(err);
+      
       res.status(500).json({ error: err });
     });
 };

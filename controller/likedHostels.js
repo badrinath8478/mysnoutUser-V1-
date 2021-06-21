@@ -3,6 +3,7 @@ const Hostel = require("../model/hosteldetails");
 const LikedHostels = require("../model/likedHostels");
 const tenant = require("../model/tenant");
 
+
 //code to add a liked hostel to an array
 exports.liked = (req, res, next) => {
   const hostel = req.params.hostelId;
@@ -24,14 +25,14 @@ exports.liked = (req, res, next) => {
           });
         });
       } else {
-        LikedHostels.findOne({ _id: result.likedHostelsId }, (err, r) => {
-          if (r.likedHostels.includes(hostel) === false) {
-            r.likedHostels.push(hostel);
-            r.save();
-            console.log(r);
-            return res.status(201).json({ success: r.likedHostels });
+        LikedHostels.findOne({ _id: result.likedHostelsId }, (err, result) => {
+          if (result.likedHostels.includes(hostel) === false) {
+            result.likedHostels.push(hostel);
+            result.save();
+            
+            return res.status(201).json({ success: result.likedHostels });
           } else {
-            return res.status(500).json({ msg: "already existed" });
+            return res.status(500).json({ error: process.env.EXIST });
           }
         });
       }
@@ -45,16 +46,15 @@ exports.liked = (req, res, next) => {
       });
     })
     .catch((err) => {
-      res.status(500).json({ error: err });
-      console.log(err);
+      return res.status(500).json({ error: err });
     });
 };
+
 
 // code to get all liked hostels 
 exports.likedHostel = (req, res, next) => {
   tenant.findById(req.tenantId, (err, result) => {
     if (result) {
-      console.log(result);
       LikedHostels.findById(result.likedHostelsId)
         .then(async (items) => {
           let Hostels = [];
@@ -74,11 +74,12 @@ exports.likedHostel = (req, res, next) => {
             .json({ hostels: Hostels.length, success: Hostels });
         })
         .catch((err) => {
-          console.log(err);
+          return res.status(500).json({ error: err });
         });
     }
   });
 };
+
 
 // code to remove a single liked hostels 
 exports.removeHostel = (req, res, next) => {
@@ -90,10 +91,10 @@ exports.removeHostel = (req, res, next) => {
         const indexValue = items.likedHostels.indexOf(hostelId);
         items.likedHostels.splice(indexValue,1);
         items.save();
-        return res.status(201).json({  success:items.likedHostels });
+        return res.status(201).json({  success:process.env.REMOVED });
       })
       .catch((err) => {
-        console.log(err);
+        return res.status(500).json({ error: err });
       });
     }
   });

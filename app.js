@@ -13,12 +13,10 @@ const getroutesRouter = require("./router/getroutes");
 const likedHostelsRouter = require("./router/likedHostels");
 
 
-
 mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true }).then(() => {
   console.log('DB Connected!');
  }).catch(err => { console.log(err) });
 mongoose.Promise = global.Promise;
-
 
 
 app.use(morgan("dev"));
@@ -26,7 +24,6 @@ app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use( express.static(path.join(__dirname, "public")));
-
 
 
 app.use((req, res, next) => {
@@ -41,7 +38,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-
 
 
 app.use("/tenant", tenantRouter);
